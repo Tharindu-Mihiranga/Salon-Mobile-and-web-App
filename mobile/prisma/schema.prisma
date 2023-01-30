@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(255)
+  email        String?        @unique
+  phone        String
+  role         Int            @default(0)
+  password     String
+  appointments appointments[]
+  branches     branches[]
+  tokens       tokens[]
+  promo     Int @default(0)
+}
+
+model tokens {
+  id     Int    @id @default(autoincrement())
+  token  String
+  userId Int
+  user   user   @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "tokens_userId_fkey")
+}
+
+model branches {
+  id            Int            @id @default(autoincrement())
+  name          String
+  image         String
+  location_lat  Float
+  location_long Float
+  adminId       Int
+  rating        Float?         @default(0)
+  rateCount     Int?           @default(0)
+  admin         user           @relation(fields: [adminId], references: [id])
+  appointments  appointments[]
+  services      services[]
+
+  @@index([adminId], map: "branches_adminId_fkey")
+}
+
+model services {
+  id           Int            @id @default(autoincrement())
+  Name         String
+  price        Float
+  desc         String
+  appointments appointments[]
+  branches     branches[]
+}
+
+model appointments {
+  id        Int      @id @default(autoincrement())
+  serviceId Int
+  branchId  Int
+  approved  Int      @default(0)
+  date      String
+  time      String
+  userId    Int?
+  feedback  String?
+  branches  branches @relation(fields: [branchId], references: [id])
+  service   services @relation(fields: [serviceId], references: [id])
+  user      user?    @relation(fields: [userId], references: [id])
+
+  @@index([branchId], map: "appointments_branchId_fkey")
+  @@index([serviceId], map: "appointments_serviceId_fkey")
+  @@index([userId], map: "appointments_userId_fkey")
+}
+
